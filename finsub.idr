@@ -1,3 +1,4 @@
+-- this is obsolete, see FinSub.lidr
 module FinSub
 
 import Data.Fin
