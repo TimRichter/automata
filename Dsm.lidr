@@ -40,7 +40,7 @@ and define a "smart constructor":
 > dsm : {a, s : Type} -> (s -> a -> s) -> (s -> Bool) -> DSM a s
 > dsm t f state = (t state, f state)
 
-Given a dsm and a state, we get a predicate on 
+Given a dsm and a state, we get a boolean predicate on 
 lists over a (i.e. a language over a)
 
 > langDSM : {a, s : Type} -> DSM a s -> s -> List a -> Bool
@@ -220,6 +220,47 @@ We prove this by defining functions
 >       l : DSMConf a s
 >       l = (q, xs)
 
+
+To test yet another variant we define the configuration
+transition relation as a boolean relation on configurations
+
+Of course we now need decidable equalities on a and s
+
+First onestep
+
+> using (a: Type, s: Type)
+> 
+>   onestepConfTransRel : 
+>     (Eq a, Eq s) =>
+>     DSM a s ->
+>     DSMConf a s ->
+>     DSMConf a s ->
+>     Bool
+>   onestepConfTransRel dsm (q, Nil) _ = False
+>   onestepConfTransRel dsm (q, x::xs) (p, ys) = (transFun dsm q x) == p && xs == ys
+
+and the full configuration transition relation
+
+> -- Helper function needed to satisfy the totatlity checker
+>   ctrHelper :
+>     (Eq a, Eq s) =>
+>     DSM a s ->
+>     s ->
+>     List a ->
+>     s ->
+>     List a ->
+>     Bool
+>   ctrHelper dsm q Nil     p Nil     = q == p
+>   ctrHelper dsm q Nil     p (y::ys) = False
+>   ctrHelper dsm q (x::xs) p  ys     = onestepConfTransRel dsm (q, x::xs) (p, ys) ||
+>                                         ctrHelper dsm (transFun dsm q x) xs p ys 
+>   confTransRel :
+>     (Eq a, Eq s) =>
+>     DSM a s ->
+>     DSMConf a s ->
+>     DSMConf a s ->
+>     Bool
+>   confTransRel dsm (q, xs) (p, ys) = ctrHelper dsm q xs p ys
 
 
 Examples
